@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Remote Desktop</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header id="header">
+      <div class="header-left">
+        <h1 class="header-title">Remote Desktop</h1>
+        <span id="status-text" class="header-status"></span>
+      </div>
+      <div class="header-right">
+        <button id="btn-grid" class="header-btn" title="Grid View">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/>
+            <rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>
+          </svg>
+        </button>
+        <button id="btn-settings" class="header-btn" title="Settings">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M8 10a2 2 0 100-4 2 2 0 000 4z"/>
+            <path fill-rule="evenodd" d="M6.5.8a1 1 0 011-.2h1a1 1 0 011 .2l.4.5a6 6 0 011.3.8l.6-.1a1 1 0 011 .4l.5.9a1 1 0 010 1.1l-.2.6c.2.5.3 1 .4 1.5l.5.3a1 1 0 01.5.9v1a1 1 0 01-.5.9l-.5.3a6 6 0 01-.4 1.5l.2.6a1 1 0 010 1.1l-.5.9a1 1 0 01-1 .4l-.6-.1a6 6 0 01-1.3.8l-.4.5a1 1 0 01-1 .2h-1a1 1 0 01-1-.2l-.4-.5a6 6 0 01-1.3-.8l-.6.1a1 1 0 01-1-.4l-.5-.9a1 1 0 010-1.1l.2-.6A6 6 0 012 9.5l-.5-.3A1 1 0 011 8.3v-1a1 1 0 01.5-.9l.5-.3c.1-.5.2-1 .4-1.5l-.2-.6a1 1 0 010-1.1l.5-.9a1 1 0 011-.4l.6.1a6 6 0 011.3-.8l.4-.5zM8 12a4 4 0 100-8 4 4 0 000 8z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- VNC Grid - cells generated dynamically from targets -->
+    <div id="vnc-grid" class="vnc-grid"></div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Settings</h2>
+          <button id="btn-close-settings" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div id="settings-list"></div>
+          <div class="settings-section">
+            <h3>Setup</h3>
+            <p class="settings-help">
+              Each Mac needs Screen Sharing enabled:<br>
+              System Settings > General > Sharing > Screen Sharing: ON
+            </p>
+            <p class="settings-help">
+              Login with your macOS username and password.<br>
+              Credentials are stored in your browser only.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Password Prompt -->
+    <div id="password-modal" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content modal-sm">
+        <div class="modal-header">
+          <h2 id="pw-title">VNC Password</h2>
+        </div>
+        <div class="modal-body">
+          <input type="text" id="pw-username" class="pw-input" placeholder="macOS username" autocomplete="username" style="margin-bottom: 8px;">
+          <input type="password" id="pw-input" class="pw-input" placeholder="macOS password" autocomplete="current-password">
+          <label class="pw-apply-all"><input type="checkbox" id="pw-apply-all" checked> Apply to all</label>
+          <div class="pw-actions">
+            <button id="pw-submit" class="btn btn-primary">Connect</button>
+            <button id="pw-skip" class="btn btn-ghost">Skip</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

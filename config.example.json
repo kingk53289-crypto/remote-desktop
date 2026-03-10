@@ -1,0 +1,6 @@
+{
+  "port": 3000,
+  "targets": [
+    { "name": "my-mac", "host": "192.168.1.100", "port": 5900, "username": "", "password": "" }
+  ]
+}
