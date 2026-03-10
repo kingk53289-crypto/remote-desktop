@@ -28,6 +28,36 @@ function startServer(configPath, publicDir, port) {
   const httpServer = http.createServer((req, res) => {
     const url = new URL(req.url, `http://127.0.0.1:${serverPort}`);
 
+    // API: update targets list
+    if (url.pathname === "/api/targets" && req.method === "PUT") {
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const data = JSON.parse(body);
+          if (!Array.isArray(data.targets)) {
+            res.writeHead(400);
+            res.end("Invalid body");
+            return;
+          }
+          config.targets = data.targets.map((t) => ({
+            name: t.name || "",
+            host: t.host || "",
+            port: t.port || 5900,
+            username: t.username || "",
+            password: t.password || "",
+          }));
+          fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n");
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ ok: true, count: config.targets.length }));
+        } catch {
+          res.writeHead(400);
+          res.end("Invalid JSON");
+        }
+      });
+      return;
+    }
+
     // API: list targets (no passwords)
     if (url.pathname === "/api/targets") {
       res.writeHead(200, { "Content-Type": "application/json" });

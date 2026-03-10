@@ -19,8 +19,8 @@ function getConfigPath() {
 
   // Copy default config to userData on first run
   const defaultConfig = app.isPackaged
-    ? path.join(process.resourcesPath, "config.json")
-    : path.join(__dirname, "..", "config.json");
+    ? path.join(process.resourcesPath, "config.example.json")
+    : path.join(__dirname, "..", "config.example.json");
 
   if (fs.existsSync(defaultConfig)) {
     fs.mkdirSync(path.dirname(userConfig), { recursive: true });
