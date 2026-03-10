@@ -426,23 +426,6 @@ function renderSettings() {
     )
     .join("");
 
-  // Add target button + Save all button
-  settingsList.innerHTML += `
-    <div style="display:flex;gap:8px;margin-top:12px;">
-      <button id="settings-add" class="btn btn-ghost" style="flex:1;">+ Add Target</button>
-      <button id="settings-save-all" class="btn btn-primary" style="flex:1;">Save & Reconnect</button>
-    </div>`;
-
-  document.getElementById("settings-add").addEventListener("click", () => {
-    state.targets.push({ name: "", host: "", port: 5900 });
-    renderSettings();
-    // Focus the new name input
-    const inputs = settingsList.querySelectorAll(".settings-name");
-    inputs[inputs.length - 1]?.focus();
-  });
-
-  document.getElementById("settings-save-all").addEventListener("click", saveAllSettings);
-
   settingsList.querySelectorAll(".settings-delete").forEach((btn) => {
     btn.addEventListener("click", () => {
       const slot = parseInt(btn.dataset.slot);
@@ -521,6 +504,15 @@ function bindEvents() {
   btnSettings.addEventListener("click", openSettings);
   document.getElementById("btn-close-settings").addEventListener("click", closeSettings);
   settingsModal.querySelector(".modal-backdrop").addEventListener("click", closeSettings);
+
+  document.getElementById("settings-add").addEventListener("click", () => {
+    state.targets.push({ name: "", host: "", port: 5900 });
+    renderSettings();
+    const inputs = settingsList.querySelectorAll(".settings-name");
+    inputs[inputs.length - 1]?.focus();
+  });
+
+  document.getElementById("settings-save-all").addEventListener("click", saveAllSettings);
 
   // Use event delegation on grid for dynamically created cells
   grid.addEventListener("click", (e) => {
