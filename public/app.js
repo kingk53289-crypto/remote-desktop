@@ -6,6 +6,8 @@ const state = {
   connections: [],
   statuses: [],
   expandedSlot: -1,
+  viewMode: "grid", // "grid" or "single"
+  activeSlot: 0,
   reconnectTimers: [],
   credentials: JSON.parse(localStorage.getItem("vnc_credentials") || "{}"),
   authFailed: [],
@@ -19,6 +21,8 @@ const state = {
 // DOM references
 const grid = document.getElementById("vnc-grid");
 const statusText = document.getElementById("status-text");
+const tabBar = document.getElementById("tab-bar");
+const btnSingle = document.getElementById("btn-single");
 const btnGrid = document.getElementById("btn-grid");
 const btnSettings = document.getElementById("btn-settings");
 const settingsModal = document.getElementById("settings-modal");
@@ -137,8 +141,8 @@ function connectSlot(slotId) {
       scaleViewport: true,
       clipViewport: false,
       shared: true,
-      qualityLevel: 1,
-      compressionLevel: 9,
+      qualityLevel: 6,
+      compressionLevel: 2,
     });
   } catch (e) {
     console.error(`[${slotId}] Failed to create RFB:`, e);
@@ -286,8 +290,13 @@ function processPasswordQueue() {
 
 function scheduleReconnect(slotId) {
   clearReconnect(slotId);
+  // In single mode, only reconnect the active slot
+  if (state.viewMode === "single" && slotId !== state.activeSlot) return;
+
   state.reconnectTimers[slotId] = setTimeout(() => {
     if (state.statuses[slotId] !== "connected" && !state.authFailed[slotId] && !state.pendingAuth[slotId]) {
+      // Double-check: don't reconnect inactive slots in single mode
+      if (state.viewMode === "single" && slotId !== state.activeSlot) return;
       console.log(`[${slotId}] Reconnecting...`);
       connectSlot(slotId);
     }
@@ -312,6 +321,10 @@ function setStatus(slotId, status) {
     const dot = cell.querySelector(".vnc-dot");
     if (dot) dot.setAttribute("data-status", status);
   }
+
+  // Update tab dot if in single view
+  const tabDot = tabBar.querySelector(`.tab-item[data-slot="${slotId}"] .tab-dot`);
+  if (tabDot) tabDot.setAttribute("data-status", status);
 
   const overlay = document.getElementById(`overlay-${slotId}`);
   if (overlay) {
@@ -382,6 +395,82 @@ function collapseToGrid() {
   document.querySelectorAll(".vnc-cell").forEach((cell) => {
     cell.classList.remove("expanded");
   });
+  setTimeout(rescaleAll, 50);
+}
+
+function setViewMode(mode) {
+  const prevMode = state.viewMode;
+  state.viewMode = mode;
+  state.expandedSlot = -1;
+  grid.classList.remove("grid-expanded", "grid-single");
+
+  document.querySelectorAll(".vnc-cell").forEach((cell) => {
+    cell.classList.remove("expanded", "active-single");
+  });
+
+  btnGrid.classList.toggle("active", mode === "grid");
+  btnSingle.classList.toggle("active", mode === "single");
+
+  if (mode === "single") {
+    grid.classList.add("grid-single");
+    tabBar.classList.remove("hidden");
+    buildTabs();
+    // Disconnect all except active slot
+    for (let i = 0; i < state.targets.length; i++) {
+      if (i !== state.activeSlot) disconnectSlot(i);
+    }
+    // Connect active slot if not connected
+    if (!state.connections[state.activeSlot]) connectSlot(state.activeSlot);
+    showSingleSlot(state.activeSlot);
+  } else {
+    tabBar.classList.add("hidden");
+    const { cols, rows } = calcGrid(state.targets.length);
+    grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+    // Reconnect all slots when switching back to grid
+    if (prevMode === "single") {
+      for (let i = 0; i < state.targets.length; i++) {
+        if (!state.connections[i]) connectSlot(i);
+      }
+    }
+  }
+  setTimeout(rescaleAll, 50);
+}
+
+function buildTabs() {
+  tabBar.innerHTML = "";
+  state.targets.forEach((t, i) => {
+    const btn = document.createElement("button");
+    btn.className = "tab-item" + (i === state.activeSlot ? " active" : "");
+    btn.dataset.slot = i;
+    btn.innerHTML = `<span class="tab-dot" data-status="${state.statuses[i] || "disconnected"}"></span>${t.name || "Target " + (i + 1)}`;
+    btn.addEventListener("click", () => showSingleSlot(i));
+    tabBar.appendChild(btn);
+  });
+}
+
+function showSingleSlot(slotId) {
+  const prevSlot = state.activeSlot;
+  state.activeSlot = slotId;
+
+  document.querySelectorAll(".vnc-cell").forEach((cell) => {
+    cell.classList.remove("active-single");
+    if (parseInt(cell.dataset.slot) === slotId) {
+      cell.classList.add("active-single");
+    }
+  });
+  tabBar.querySelectorAll(".tab-item").forEach((tab) => {
+    tab.classList.toggle("active", parseInt(tab.dataset.slot) === slotId);
+  });
+
+  // Disconnect previous, connect new
+  if (prevSlot !== slotId && state.viewMode === "single") {
+    disconnectSlot(prevSlot);
+    if (!state.connections[slotId]) connectSlot(slotId);
+  }
+
+  const rfb = state.connections[slotId];
+  if (rfb) rfb.focus();
   setTimeout(rescaleAll, 50);
 }
 
@@ -484,6 +573,10 @@ async function saveAllSettings() {
   state.targets = targets.map((t) => ({ name: t.name, host: t.host, port: t.port }));
   initState(state.targets.length);
   buildGrid(state.targets);
+  if (state.viewMode === "single") {
+    state.activeSlot = Math.min(state.activeSlot, state.targets.length - 1);
+    setViewMode("single");
+  }
   closeSettings();
 
   for (let i = 0; i < state.targets.length; i++) {
@@ -499,7 +592,8 @@ function saveCredentials() {
 // Event Binding
 // ============================================================
 function bindEvents() {
-  btnGrid.addEventListener("click", collapseToGrid);
+  btnGrid.addEventListener("click", () => setViewMode("grid"));
+  btnSingle.addEventListener("click", () => setViewMode("single"));
 
   btnSettings.addEventListener("click", openSettings);
   document.getElementById("btn-close-settings").addEventListener("click", closeSettings);

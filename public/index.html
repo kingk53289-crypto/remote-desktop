@@ -15,7 +15,12 @@
         <span id="status-text" class="header-status"></span>
       </div>
       <div class="header-right">
-        <button id="btn-grid" class="header-btn" title="Grid View">
+        <button id="btn-single" class="header-btn" title="Single View">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <rect x="1" y="1" width="14" height="14" rx="2"/>
+          </svg>
+        </button>
+        <button id="btn-grid" class="header-btn active" title="Grid View">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
             <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/>
             <rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>
@@ -29,6 +34,9 @@
         </button>
       </div>
     </header>
+
+    <!-- Tab bar for single view mode -->
+    <div id="tab-bar" class="tab-bar hidden"></div>
 
     <!-- VNC Grid - cells generated dynamically from targets -->
     <div id="vnc-grid" class="vnc-grid"></div>

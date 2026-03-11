@@ -44,7 +44,7 @@ const DEFAULT_BACKGROUND = 'rgb(40, 40, 40)';
 const MOUSE_MOVE_DELAY = 17;
 
 // Wheel thresholds
-const WHEEL_STEP = 50; // Pixels needed for one step
+const WHEEL_STEP = 3; // Pixels needed for one step (lowered from 50 for better trackpad/wheel response)
 const WHEEL_LINE_HEIGHT = 19; // Assumed pixels for one line step
 
 // Gesture thresholds
@@ -1192,29 +1192,28 @@ export default class RFB extends EventTargetMixin {
         this._accumulatedWheelDeltaX += dX;
         this._accumulatedWheelDeltaY += dY;
 
-        // Generate a mouse wheel step event when the accumulated delta
-        // for one of the axes is large enough.
-        if (Math.abs(this._accumulatedWheelDeltaX) >= WHEEL_STEP) {
+        // Generate mouse wheel step events proportional to accumulated delta.
+        while (Math.abs(this._accumulatedWheelDeltaX) >= WHEEL_STEP) {
             if (this._accumulatedWheelDeltaX < 0) {
                 this._handleMouseButton(pos.x, pos.y, true, 1 << 5);
                 this._handleMouseButton(pos.x, pos.y, false, 1 << 5);
-            } else if (this._accumulatedWheelDeltaX > 0) {
+                this._accumulatedWheelDeltaX += WHEEL_STEP;
+            } else {
                 this._handleMouseButton(pos.x, pos.y, true, 1 << 6);
                 this._handleMouseButton(pos.x, pos.y, false, 1 << 6);
+                this._accumulatedWheelDeltaX -= WHEEL_STEP;
             }
-
-            this._accumulatedWheelDeltaX = 0;
         }
-        if (Math.abs(this._accumulatedWheelDeltaY) >= WHEEL_STEP) {
+        while (Math.abs(this._accumulatedWheelDeltaY) >= WHEEL_STEP) {
             if (this._accumulatedWheelDeltaY < 0) {
                 this._handleMouseButton(pos.x, pos.y, true, 1 << 3);
                 this._handleMouseButton(pos.x, pos.y, false, 1 << 3);
-            } else if (this._accumulatedWheelDeltaY > 0) {
+                this._accumulatedWheelDeltaY += WHEEL_STEP;
+            } else {
                 this._handleMouseButton(pos.x, pos.y, true, 1 << 4);
                 this._handleMouseButton(pos.x, pos.y, false, 1 << 4);
+                this._accumulatedWheelDeltaY -= WHEEL_STEP;
             }
-
-            this._accumulatedWheelDeltaY = 0;
         }
     }
 
