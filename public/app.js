@@ -194,6 +194,22 @@ function connectSlot(slotId) {
     }
   });
 
+  // Clipboard: remote → local
+  rfb.addEventListener("clipboard", (e) => {
+    if (e.detail && e.detail.text && navigator.clipboard) {
+      navigator.clipboard.writeText(e.detail.text).catch(() => {});
+    }
+  });
+
+  // Clipboard: local → remote (on focus / click)
+  rfb._canvas.addEventListener("focus", () => {
+    if (navigator.clipboard && navigator.clipboard.readText) {
+      navigator.clipboard.readText().then((text) => {
+        if (text) rfb.clipboardPasteFrom(text);
+      }).catch(() => {});
+    }
+  });
+
   rfb.focusOnClick = true;
   state.connections[slotId] = rfb;
 }
